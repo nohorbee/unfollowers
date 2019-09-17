@@ -8,6 +8,56 @@ var client = new Twitter({
   access_token_secret: process.env.ACCESS_TOKEN_SECRET
 });
 
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.get("/", (req, res) => {
+
+  getFollowers('nohorbee').then(async currentFollowers => {
+    let data = {}
+    try {
+      data = await fs.readFile('./followers.json');
+    } catch (err) {
+      if(err.errno === -2) {
+        await fs.writeFile("./followers.json", '{"ids":[],"next_cursor":0,"next_cursor_str":"0","previous_cursor":0,"previous_cursor_str":"0","total_count":null}');
+        data = await fs.readFile('./followers.json');
+      }
+    }
+  
+    let oldFollowers = JSON.parse(data);
+    let newFollowers = diff(oldFollowers.ids, currentFollowers.ids);
+    let newUnfollowers = diff(currentFollowers.ids, oldFollowers.ids);
+  
+    (async () => {
+      await fs.writeFile('./followers.json', JSON.stringify(currentFollowers), 'utf8');
+    })();
+
+    let response = ""
+  
+    if (newFollowers.length) {
+      response += "Your new followers: ";
+      await getUsers(newFollowers.join(',')).then(users => { response += generateTable(users) } ).catch(console.log);
+    } else {
+      response += "no new followers";
+    }
+      
+    if (newUnfollowers.length) {
+      response += "Your new unfollowers: ";
+      await getUsers(newUnfollowers.join(',')).then(users => { response+= generateTable(users) } ).catch(console.log);
+    } else {
+      response += "no new unfollowers";
+    }
+  
+    res.send(response);
+    
+  
+  }).catch(console.log);
+
+});
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`))
+
 
 
 let getUsers = (ids, cursor) => {
@@ -38,43 +88,6 @@ let getFollowers = (screenName, cursor) => {
 
   })
 }
-
-getFollowers('nohorbee').then(async currentFollowers => {
-  let data = {}
-  try {
-    data = await fs.readFile('./followers.json');
-  } catch (err) {
-    if(err.errno === -2) {
-      await fs.writeFile("./followers.json", '{"ids":[],"next_cursor":0,"next_cursor_str":"0","previous_cursor":0,"previous_cursor_str":"0","total_count":null}');
-      data = await fs.readFile('./followers.json');
-    }
-  }
-
-  let oldFollowers = JSON.parse(data);
-  let newFollowers = diff(oldFollowers.ids, currentFollowers.ids);
-  let newUnfollowers = diff(currentFollowers.ids, oldFollowers.ids);
-
-  (async () => {
-    await fs.writeFile('./followers.json', JSON.stringify(currentFollowers), 'utf8');
-  })();
-
-  if (newFollowers.length) {
-    console.log("Your new followers: ")
-    await getUsers(newFollowers.join(',')).then(users => { console.log(generateTable(users)) } ).catch(console.log);
-  } else {
-    console.log("no new followers")
-  }
-    
-  if (newUnfollowers.length) {
-    console.log("Your new unfollowers: ")
-    await getUsers(newUnfollowers.join(',')).then(users => { console.log(generateTable(users)) } ).catch(console.log);
-  } else {
-    console.log("no new unfollowers")
-  }
-
-  
-
-}).catch(console.log);
 
 function diff(newArr, oldArr) {
   let newSet = new Set(newArr);
