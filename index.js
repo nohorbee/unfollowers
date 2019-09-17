@@ -40,9 +40,17 @@ let getFollowers = (screenName, cursor) => {
 }
 
 getFollowers('nohorbee').then(async currentFollowers => {
-  let data = await fs.readFile('./followers.json')
-  let oldFollowers = JSON.parse(data);
+  let data = {}
+  try {
+    data = await fs.readFile('./followers.json');
+  } catch (err) {
+    if(err.errno === -2) {
+      await fs.writeFile("./followers.json", '{"ids":[],"next_cursor":0,"next_cursor_str":"0","previous_cursor":0,"previous_cursor_str":"0","total_count":null}');
+      data = await fs.readFile('./followers.json');
+    }
+  }
 
+  let oldFollowers = JSON.parse(data);
   let newFollowers = diff(oldFollowers.ids, currentFollowers.ids);
   let newUnfollowers = diff(currentFollowers.ids, oldFollowers.ids);
 
