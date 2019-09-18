@@ -1,5 +1,7 @@
 # Unfolowers
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 This repo contains a couple of files. 
 `index.js` launches an express application that queries the twitter API for a set of credentials and compares with the previous run to determine if there are new followers or unfollowers.
 The code is really rustic since I was trying to play with the APIs, but I might shape it a bit better in the future.
