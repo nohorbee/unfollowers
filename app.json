@@ -1,0 +1,23 @@
+{
+    "name": "Unfollowers",
+    "description": "A rustic app to check new followers and unfollowers",
+    "repository": "https://https://github.com/nohorbee/unfollowers",
+    "keywords": ["node", "express", "twitter", "unfollowers", "social intelligence"],
+    "env": {
+        "CONSUMER_KEY": {
+          "description": "The consumer key provided by Twitter"
+        },
+        "CONSUMER_SECRET": {
+            "description": "The consumer secret provided by Twitter"
+        },
+        "ACCESS_TOKEN_KEY": {
+            "description": "The access token key provided by Twitter"
+        },
+        "ACCESS_TOKEN_SECRET": {
+        "description": "The access token secret provided by Twitter"
+        },
+        "SCREEN_NAME": {
+          "description": "The screen name of the interested person"
+        }
+      }
+  }
