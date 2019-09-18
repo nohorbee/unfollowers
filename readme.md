@@ -19,6 +19,7 @@ CONSUMER_KEY = "RANDOMRANDOMRANDOM"
 CONSUMER_SECRET = "RANDOMRANDOMRANDOM"
 ACCESS_TOKEN_KEY = "RANDOMRANDOMRANDOM"
 ACCESS_TOKEN_SECRET = "RANDOMRANDOMRANDOM"
+SCREEN_NAME = "THE_SCREEN_NAME_OF_THE_INTERESTED"
 ```
 For getting the keys and secrets required by this configuration, you can create a Twitter application: https://developer.twitter.com/en/apps
 
