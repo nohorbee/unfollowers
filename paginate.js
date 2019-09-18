@@ -24,7 +24,7 @@ let getFollowers = (screenName, cursor) => {
     })
 }
 
-getFollowers('nohorbee')
+getFollowers(process.env.screenName)
     .then(followers => {
         console.log("here are your followers: ");
         console.log(followers)

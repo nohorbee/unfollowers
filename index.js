@@ -14,7 +14,7 @@ let port = process.env.PORT || 8000;
 
 app.get("/", (req, res) => {
 
-  getFollowers('nohorbee').then(async currentFollowers => {
+  getFollowers(process.env.SCREEN_NAME).then(async currentFollowers => {
     let data = {}
     try {
       data = await fs.readFile('./followers.json');
@@ -52,7 +52,7 @@ app.get("/", (req, res) => {
     res.send(response);
     
   
-  }).catch(console.log);
+  }).catch(err => {console.log(err); res.status(500).send("Something went wrong. Please check your logs to get more info")});
 
 });
 
@@ -76,6 +76,7 @@ let getUsers = (ids, cursor) => {
 
 let getFollowers = (screenName, cursor) => {
   return new Promise((resolve, reject) => {
+    if(!screenName) reject ({err: "The screenName is not specified"});
     var params = { screen_name: screenName, cursor: cursor, stringify_ids: true, count: 5000 };
     var totalFollowers = [];
     client.get('followers/ids', params, function getData(error, followers, response) {
