@@ -43,52 +43,43 @@ db.connect(dbConfiguration, function(err) {
   }
 });
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
 
-  getFollowers(process.env.SCREEN_NAME).then(async currentFollowers => {
-    let data = {}
-    try {
-      data = await getPreviousFollowers();
-    } catch (err) {
-      console.log(err.errno);
-      if(err.errno === -6) {
-        console.log("entro por err -6")
-        await saveFollowers({"ids":[],"next_cursor":0,"next_cursor_str":"0","previous_cursor":0,"previous_cursor_str":"0","total_count":null});
-        console.log("grabo datos falsos")
-        data = await getPreviousFollowers();
-        console.log("leyo datos falsos")
-      }
-    }
-  
-    let oldFollowers = data;
-    let newFollowers = diff(oldFollowers.ids, currentFollowers.ids);
-    let newUnfollowers = diff(currentFollowers.ids, oldFollowers.ids);
-  
-    (async () => {
-      //await fs.writeFile('./followers.json', JSON.stringify(currentFollowers), 'utf8');
-      await saveFollowers(currentFollowers);
-    })();
+  try {
+    currentFollowers = await getFollowers(process.env.SCREEN_NAME);
+  } catch (err) {
+    console.log("Error: can't get the current followers " + err); 
+    res.status(500).send("Can't get the current followers");
+  }
+  let oldFollowers = [];
+  try {
+    oldFollowers = await getPreviousFollowers();
+    console.log(oldFollowers);
+  } catch (err) {
+    console.log("WARN: Could not get the previous followers" + err)
+  }
+  let newFollowers = diff(oldFollowers, currentFollowers.ids);
+  let newUnfollowers = diff(currentFollowers.ids, oldFollowers);
 
-    let response = ""
-  
-    if (newFollowers.length) {
-      response += "Your new followers: ";
-      await getUsers(newFollowers.join(',')).then(users => { response += generateTable(users) } ).catch(console.log);
-    } else {
-      response += "no new followers";
-    }
-      
-    if (newUnfollowers.length) {
-      response += "Your new unfollowers: ";
-      await getUsers(newUnfollowers.join(',')).then(users => { response+= generateTable(users) } ).catch(console.log);
-    } else {
-      response += "no new unfollowers";
-    }
-  
-    res.send(response);
+  await saveFollowers(currentFollowers.ids);
+
+  let response = ""
+
+  if (newFollowers.length) {
+    response += "Your new followers: ";
+    await getUsers(newFollowers.join(',')).then(users => { response += generateTable(users) } ).catch(console.log);
+  } else {
+    response += "no new followers";
+  }
     
-  
-  }).catch(err => {console.log(err); res.status(500).send("Something went wrong. Please check your logs to get more info")});
+  if (newUnfollowers.length) {
+    response += "Your new unfollowers: ";
+    await getUsers(newUnfollowers.join(',')).then(users => { response+= generateTable(users) } ).catch(console.log);
+  } else {
+    response += "no new unfollowers";
+  }
+
+  res.send(response);
 
 });
 
@@ -156,70 +147,27 @@ function createRow(user) {
   return str;
 }
 
-function saveFollowers(message) {
-  return new Promise((resolve, reject) => {
-    var collection = db.get().collection('followers');
-    deleteCollection(collection);
-    collection.insert({"message": message}, function(err, result) {
-      if (err) {
-        reject(err);
-      } else {
-        console.log("Succesfully saving a list of followers" + message.ids.length);
-        resolve(result);
-      }
-    });
-  });
-  
+async function saveFollowers(message) {
+  var collection = db.get().collection('followers');
+  try {
+    await collection.drop();
+  } catch (err) {
+    console.log("WARN: Could not drop the collection. It's ok for the first time running the app" + err);
+  }
+  try {
+    result = await collection.insert({"message": message});
+    console.log("Succesfully saving a list of followers" + message.length);
+  } catch (err) {
+    console.log("Error while inserting: " + err);
+  } 
 }
 
-
-function deleteCollection(collection) {
-  return new Promise((resolve, reject) => {
-
-    collection.drop(function(err, delOK) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(delOK);
-      }
-    })
-
-  }); 
-  
+async function getPreviousFollowers() {
+  var collection = db.get().collection('followers');
+  try {
+    result = await collection.find().toArray();
+    return result[0].message;
+  } catch (err) {
+    console.log("WARN: Could not retrieve previous followers. It's ok for the first time running the app" + err);
+  }
 }
-
-function getPreviousFollowers(callback, convo) {
-
-  return new Promise((resolve, reject) => {
-    var collection = db.get().collection('followers');
-
-    collection.find().toArray(function(err, docs) {
-      if (err) {
-        console.log("entro por err 1")
-        reject(err);
-      } else {
-        console.log("entro por err 2")
-        if(!docs || docs.length == 0) {
-          err = {errno: -6}
-          reject(err);
-        } else {
-          console.log("successfully read followers " + docs[0].message);
-          resolve(docs[0].message)
-        }
-        
-      }      
-    });
-  });
-
-  
-}
-
-// console.log(followers);
-
-// totalFollowers = followers.users;
-// cursor = followers.next_cursor;
-// console.log(totalFollowers);
-// console.log(cursor)
-
-
-
