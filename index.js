@@ -1,5 +1,6 @@
 var Twitter = require('twitter');
 const fs = require('fs').promises;
+var db = require('./db');
 
 var client = new Twitter({
   consumer_key: process.env.CONSUMER_KEY,
@@ -12,25 +13,60 @@ const express = require('express');
 const app = express();
 let port = process.env.PORT || 8000;
 
+var dbConfiguration = {};
+
+dbConfiguration.host = process.env.dbHost;
+dbConfiguration.port = process.env.dbPort;
+dbConfiguration.name = process.env.dbName;
+dbConfiguration.user = process.env.dbUser || '';
+dbConfiguration.password = process.env.dbPassword || '';
+
+
+dbConfiguration.toURL = function() {
+
+  var securityString = '';
+  if (this.user.length>0) {
+    securityString = this.user + ':' + this.password + '@';
+  }
+
+  var url = 'mongodb://' + securityString + this.host +':'+ this.port +'/'+ this.name +'';
+  console.log('URL' + url);
+  return url;
+}
+
+db.connect(dbConfiguration, function(err) {
+  if (err) {
+    console.log('Unable to connect to Mongo.')
+    process.exit(1)
+  } else {
+    console.log("Connected to Gauss DB");
+  }
+});
+
 app.get("/", (req, res) => {
 
   getFollowers(process.env.SCREEN_NAME).then(async currentFollowers => {
     let data = {}
     try {
-      data = await fs.readFile('./followers.json');
+      data = await getPreviousFollowers();
     } catch (err) {
-      if(err.errno === -2) {
-        await fs.writeFile("./followers.json", '{"ids":[],"next_cursor":0,"next_cursor_str":"0","previous_cursor":0,"previous_cursor_str":"0","total_count":null}');
-        data = await fs.readFile('./followers.json');
+      console.log(err.errno);
+      if(err.errno === -6) {
+        console.log("entro por err -6")
+        await saveFollowers({"ids":[],"next_cursor":0,"next_cursor_str":"0","previous_cursor":0,"previous_cursor_str":"0","total_count":null});
+        console.log("grabo datos falsos")
+        data = await getPreviousFollowers();
+        console.log("leyo datos falsos")
       }
     }
   
-    let oldFollowers = JSON.parse(data);
+    let oldFollowers = data;
     let newFollowers = diff(oldFollowers.ids, currentFollowers.ids);
     let newUnfollowers = diff(currentFollowers.ids, oldFollowers.ids);
   
     (async () => {
-      await fs.writeFile('./followers.json', JSON.stringify(currentFollowers), 'utf8');
+      //await fs.writeFile('./followers.json', JSON.stringify(currentFollowers), 'utf8');
+      await saveFollowers(currentFollowers);
     })();
 
     let response = ""
@@ -118,6 +154,64 @@ function createRow(user) {
   `;
 
   return str;
+}
+
+function saveFollowers(message) {
+  return new Promise((resolve, reject) => {
+    var collection = db.get().collection('followers');
+    deleteCollection(collection);
+    collection.insert({"message": message}, function(err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        console.log("Succesfully saving a list of followers" + message.ids.length);
+        resolve(result);
+      }
+    });
+  });
+  
+}
+
+
+function deleteCollection(collection) {
+  return new Promise((resolve, reject) => {
+
+    collection.drop(function(err, delOK) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(delOK);
+      }
+    })
+
+  }); 
+  
+}
+
+function getPreviousFollowers(callback, convo) {
+
+  return new Promise((resolve, reject) => {
+    var collection = db.get().collection('followers');
+
+    collection.find().toArray(function(err, docs) {
+      if (err) {
+        console.log("entro por err 1")
+        reject(err);
+      } else {
+        console.log("entro por err 2")
+        if(!docs || docs.length == 0) {
+          err = {errno: -6}
+          reject(err);
+        } else {
+          console.log("successfully read followers " + docs[0].message);
+          resolve(docs[0].message)
+        }
+        
+      }      
+    });
+  });
+
+  
 }
 
 // console.log(followers);
