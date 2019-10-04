@@ -15,11 +15,11 @@ let port = process.env.PORT || 8000;
 
 var dbConfiguration = {};
 
-dbConfiguration.host = process.env.dbHost;
-dbConfiguration.port = process.env.dbPort;
-dbConfiguration.name = process.env.dbName;
-dbConfiguration.user = process.env.dbUser || '';
-dbConfiguration.password = process.env.dbPassword || '';
+dbConfiguration.host = process.env.DB_HOST;
+dbConfiguration.port = process.env.DB_PORT;
+dbConfiguration.name = process.env.DB_NAME;
+dbConfiguration.user = process.env.DB_USER || '';
+dbConfiguration.password = process.env.DB_PASSWORD || '';
 
 
 dbConfiguration.toURL = function() {

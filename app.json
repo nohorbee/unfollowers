@@ -18,6 +18,22 @@
         },
         "SCREEN_NAME": {
           "description": "The screen name of the interested person"
+        },
+        "DB_HOST": {
+          "description": "The host uri of the DB"
+        },
+        "DB_PORT": {
+          "description": "The port of the DB"
+        },
+        "DB_NAME": {
+          "description": "The name of the DB"
+        },
+        "DB_USER": {
+          "description": "The user of the DB"
+        },
+        "DB_PASSWORD": {
+          "description": "The password of the DB"
         }
+        
       }
   }
