@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "start-local": "node -r dotenv/config index.js"
+    "start": "node -r esm index.js",
+    "start-local": "node -r dotenv/config -r esm index.js"
   },
   "author": "nohorbee",
   "license": "ISC",
@@ -16,6 +16,7 @@
     "twitter": "^1.7.1"
   },
   "devDependencies": {
-    "dotenv": "^8.1.0"
+    "dotenv": "^8.1.0",
+    "esm": "^3.2.25"
   }
 }

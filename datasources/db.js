@@ -7,10 +7,15 @@ var state = {
 
 exports.connect = async function(dbConfiguration) {
   url = dbConfiguration.toURL();
-  if (state.db) return;
-  console.log("Trying to connect to: " + url);
-  await MongoClient.connect(url).then(db => {state.db = db;})
-  console.log("connected to DB");
+  if (state.db) return state.db;
+  await MongoClient.connect(url).then(db => {
+    state.db = db;
+    console.log("Connected to DB: " + dbConfiguration.toURL());
+  }).catch(err => {
+    console.log('Unable to connect to Mongo ' + err);
+    process.exit(1);
+  });
+  return state.db
 }
 
 exports.get = function() {
