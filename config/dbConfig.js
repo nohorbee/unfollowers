@@ -14,7 +14,7 @@ dbConfig.toURL = function() {
     securityString = this.user + ':' + this.password + '@';
   }
 
-  var url = 'mongodb://' + securityString + this.host +':'+ this.port +'/'+ this.name +'';
+  var url = 'mongodb+srv://' + securityString + this.host +'/'+ this.name +'?retryWrites=true&w=majority';
   return url;
 }
 
