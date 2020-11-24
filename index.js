@@ -1,3 +1,4 @@
+var dotenv = require('dotenv').config();
 import routes from './routes';
 import { dbConfiguration } from './config';
 import db from './datasources/db';

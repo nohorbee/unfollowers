@@ -8,8 +8,8 @@ var state = {
 exports.connect = async function(dbConfiguration) {
   url = dbConfiguration.toURL();
   if (state.db) return state.db;
-  await MongoClient.connect(url).then(db => {
-    state.db = db;
+  await MongoClient.connect(url).then(client => {
+    state.db = client.db(dbConfiguration.name);
     console.log("Connected to DB: " + dbConfiguration.toURL());
   }).catch(err => {
     console.log('Unable to connect to Mongo ' + err);
